@@ -1,0 +1,117 @@
+:root {
+  /* Diseño cromático triádico usando HSL */
+  --color-bg: hsl(225, 30%, 8%);
+  --color-surface: hsl(225, 20%, 15%);
+  --color-text: hsl(0, 0%, 95%);
+  --color-text-muted: hsl(225, 10%, 70%);
+  
+  --color-primary: hsl(200, 100%, 50%); /* Cyan (Nave/Acentos) */
+  --color-danger: hsl(350, 80%, 55%);  /* Rojo (Enemigos/Alertas) */
+  --color-accent: hsl(50, 100%, 50%);  /* Amarillo (Puntos/Proyectiles) */
+
+  --font-main: system-ui, -apple-system, sans-serif;
+  --radius: 0.5rem;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(100%, 800px);
+  padding: 1rem;
+}
+
+/* Tipografía contrastada en la misma fuente mediante peso y color */
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--color-surface);
+  border-radius: var(--radius);
+  border: 1px solid hsl(225, 20%, 25%);
+}
+
+.hud-item { font-size: 1.2rem; }
+.hud-item strong { color: var(--color-accent); }
+
+/* Canvas como elemento block contenido */
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 4 / 3;
+  background-color: hsl(225, 40%, 4%);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px hsla(200, 100%, 50%, 0.1);
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+}
+
+.btn:hover:not(:disabled) { filter: brightness(1.2); }
+.btn:active:not(:disabled) { transform: translateY(2px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary { background: var(--color-primary); color: hsl(225, 40%, 4%); }
+.btn-secondary { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-text-muted); }
+.btn-help { background: transparent; color: var(--color-accent); border: 1px solid var(--color-accent); }
+
+/* Estilizado del Popover API NATIVO */
+[popover] {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: 0 20px 40px hsla(0, 0%, 0%, 0.5);
+}
+
+[popover]::backdrop {
+  background-color: hsla(225, 30%, 8%, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.danger { border-color: var(--color-danger); }
+.danger h2 { color: var(--color-danger); }

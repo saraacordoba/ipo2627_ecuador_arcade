@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcade · Matamarcianos</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="controller.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1>Defensor Espacial</h1>
+        <p class="subtitle">Sobrevive a las oleadas</p>
+      </div>
+      <div class="hud">
+        <span class="hud-item">Puntuación: <strong data-score>0</strong></span>
+        <span class="hud-item">Vidas: <strong data-lives>3</strong></span>
+      </div>
+    </header>
+
+    <main class="game-container">
+      <canvas id="gameCanvas" width="800" height="600" aria-label="Pantalla del juego"></canvas>
+      
+      <div class="controls">
+        <button id="btn-start" class="btn btn-primary">Iniciar Partida</button>
+        <button id="btn-pause" class="btn btn-secondary" disabled>Pausar</button>
+        <!-- Popover API Nativa -->
+        <button class="btn btn-help" popovertarget="helpMenu">¿Cómo jugar?</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Popover de Ayuda -->
+  <div id="helpMenu" popover class="popover-panel">
+    <h2>Reglas del Juego</h2>
+    <ul>
+      <li><strong>Movimiento:</strong> Flecha Izquierda / Flecha Derecha.</li>
+      <li><strong>Disparo:</strong> Barra Espaciadora.</li>
+      <li><strong>Objetivo:</strong> Destruye las naves rojas antes de que te toquen.</li>
+    </ul>
+    <button class="btn btn-secondary" popovertarget="helpMenu" popovertargetaction="hide">Cerrar</button>
+  </div>
+
+  <!-- Popover de Fin de Juego -->
+  <div id="gameOverMenu" popover class="popover-panel danger">
+    <h2>¡Fin de la partida!</h2>
+    <p>Puntuación final: <strong data-final-score>0</strong></p>
+    <button id="btn-restart" class="btn btn-primary">Volver a jugar</button>
+  </div>
+</body>
+</html>
