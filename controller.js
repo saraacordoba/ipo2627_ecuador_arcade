@@ -1,94 +1,130 @@
-import { GameModel } from './model.js';
+import { GameModel, GameState } from './model.js';
 import { GameView } from './view.js';
+
+const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', Space: 'shoot', KeyP: 'pause' };
 
 class GameController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
-    
+
     // Estado de controles
     this.inputs = { left: false, right: false, shoot: false };
     this.lastTime = 0;
     this.animationId = null;
 
-    // Enlazamos eventos de la Vista hacia nuestros métodos del Controlador
-    this.view.bindControls(
-      () => this.startGame(),
-      () => this.togglePause(),
-      () => this.restartGame()
-    );
-    
-    this.view.bindInputs((code, isPressed) => this.handleInput(code, isPressed));
-    this.view.bindPopoverEvents(() => this.pauseGameByPopover());
+    // Enlazamos eventos de la Vista hacia los métodos del Controlador
+    this.view.bindControls({
+      onStart: () => this.startGame(),
+      onPause: () => this.togglePause(),
+      onConfirmEnd: () => this.endGame(),
+      onRestart: () => this.startGame(),
+    });
+    this.view.bindInputs((code, isPressed, isRepeat) => this.handleInput(code, isPressed, isRepeat));
+    this.view.bindSettings((difficulty) => this.changeDifficulty(difficulty));
+    this.view.bindPopoverEvents(() => this.pause());
+    this.view.bindVisibility(() => this.pause());
 
     // Render inicial
-    this.view.render(this.model);
+    this.model.setDifficulty(this.view.getDifficulty());
+    this.refresh();
   }
 
-  handleInput(code, isPressed) {
-    if (code === 'ArrowLeft') this.inputs.left = isPressed;
-    if (code === 'ArrowRight') this.inputs.right = isPressed;
-    if (code === 'Space' && isPressed) this.inputs.shoot = true; 
+  // Devuelve true si la tecla la usa el juego
+  handleInput(code, isPressed, isRepeat) {
+    const action = KEYS[code];
+    if (!action) return false;
+
+    if (action === 'pause') {
+      if (!isPressed || isRepeat || !this.model.isRunning) return false;
+      this.togglePause();
+      return true;
+    }
+
+    if (!isPressed) {
+      this.inputs[action] = false;
+      return false;
+    }
+    if (this.model.state !== GameState.PLAYING) return false;
+    this.inputs[action] = true;
+    return true;
+  }
+
+  changeDifficulty(difficulty) {
+    if (!this.model.setDifficulty(difficulty)) return;
+    this.view.hideGameOver();
+    this.refresh();
   }
 
   startGame() {
-    this.model.start();
-    this.view.updateHUD(this.model.score, this.model.lives, this.model.state);
-    this.lastTime = performance.now();
-    this.gameLoop(this.lastTime);
-  }
-
-  restartGame() {
     this.view.hideGameOver();
-    this.startGame();
+    this.resetInputs();
+    this.model.start();
+    this.refresh();
+    this.startLoop();
   }
 
   togglePause() {
-    if (this.model.state === 'PLAYING') {
-      this.model.state = 'PAUSED';
-      cancelAnimationFrame(this.animationId);
-    } else if (this.model.state === 'PAUSED') {
-      this.model.state = 'PLAYING';
-      this.lastTime = performance.now();
-      this.gameLoop(this.lastTime);
-    }
-    this.view.updateHUD(this.model.score, this.model.lives, this.model.state);
+    if (this.model.state === GameState.PLAYING) this.pause();
+    else if (this.model.state === GameState.PAUSED) this.resume();
   }
 
-  // Forzado por la apertura del popover de ayuda
-  pauseGameByPopover() {
-    if (this.model.state === 'PLAYING') {
-      this.togglePause();
-    }
+  pause() {
+    if (!this.model.pause()) return;
+    cancelAnimationFrame(this.animationId);
+    this.resetInputs();
+    this.refresh();
+  }
+
+  resume() {
+    if (!this.model.resume()) return;
+    this.refresh();
+    this.startLoop();
+  }
+
+  endGame() {
+    if (!this.model.end()) return;
+    cancelAnimationFrame(this.animationId);
+    this.finishGame();
+  }
+
+  // ==== BUCLE PRINCIPAL ====
+  startLoop() {
+    cancelAnimationFrame(this.animationId);
+    this.lastTime = performance.now();
+    this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
   }
 
   gameLoop(currentTime) {
-    if (this.model.state !== 'PLAYING') return;
-
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    // Actualiza datos lógicos
-    this.model.update(deltaTime, this.inputs);
+    this.model.update(deltaTime, this.inputs); // 1. Actualiza datos lógicos
+    this.refresh();                            // 2. Dibuja fotograma e interfaz
 
-    // Actualiza interfaz si es necesario
-    if (this.model.state === 'GAMEOVER') {
-      this.view.showGameOver(this.model.score);
-      this.view.updateHUD(this.model.score, this.model.lives, this.model.state);
+    if (this.model.state === GameState.GAMEOVER) {
+      this.finishGame();
       return; // Rompe el bucle
     }
+    this.animationId = requestAnimationFrame((time) => this.gameLoop(time)); // 3. Siguiente fotograma
+  }
 
-    this.view.updateHUD(this.model.score, this.model.lives, this.model.state);
-    
-    // Dibuja fotograma
+  finishGame() {
+    this.resetInputs();
+    this.refresh();
+    this.view.showGameOver(this.model.score);
+  }
+
+  refresh() {
     this.view.render(this.model);
+    this.view.updateHUD(this.model);
+  }
 
-    // Solicita siguiente fotograma
-    this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
+  resetInputs() {
+    this.inputs.left = this.inputs.right = this.inputs.shoot = false;
   }
 }
 
-// Inicialización de la aplicación
-const canvasWidth = 800;
-const canvasHeight = 600;
-const app = new GameController(new GameModel(canvasWidth, canvasHeight), new GameView());
+// Inicialización de la aplicación (las dimensiones se toman del canvas)
+const view = new GameView();
+const app = new GameController(new GameModel(view.canvas.width, view.canvas.height), view);

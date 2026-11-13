@@ -1,90 +1,207 @@
+/* =========================================================
+   VARIABLES DE DISEÑO
+   Separadas en tres aspectos: cromático, tipográfico y espacial.
+   ========================================================= */
 :root {
-  /* Diseño cromático triádico usando HSL */
-  --color-bg: hsl(225, 30%, 8%);
-  --color-surface: hsl(225, 20%, 15%);
-  --color-text: hsl(0, 0%, 95%);
-  --color-text-muted: hsl(225, 10%, 70%);
-  
-  --color-primary: hsl(200, 100%, 50%); /* Cyan (Nave/Acentos) */
-  --color-danger: hsl(350, 80%, 55%);  /* Rojo (Enemigos/Alertas) */
-  --color-accent: hsl(50, 100%, 50%);  /* Amarillo (Puntos/Proyectiles) */
+  /* ---------------------------------------------------------
+     1. DISEÑO CROMÁTICO 
+     --------------------------------------------------------- */
+  --color-bg: hsl(225 30% 8%);
+  --color-canvas: hsl(225 40% 4%);
+  --color-surface: hsl(225 20% 15%);
+  --color-border: hsl(225 15% 50%);
+  --color-text: hsl(0 0% 95%);
+  --color-text-muted: hsl(225 12% 72%);
 
-  --font-main: system-ui, -apple-system, sans-serif;
+  --color-primary: hsl(200 100% 50%);
+  --color-danger: hsl(350 80% 65%);
+  --color-accent: hsl(50 100% 55%);
+
+  /* ---------------------------------------------------------
+     2. DISEÑO TIPOGRÁFICO
+     --------------------------------------------------------- */
+  --font-main: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.25rem;
+  --font-size-lg: 1.5rem;
+  --font-size-xl: clamp(1.8rem, 4vw, 2.5rem);
+
+  /* ---------------------------------------------------------
+     3. DISEÑO ESPACIAL 
+     --------------------------------------------------------- */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
   --radius: 0.5rem;
+  --max-width: 50rem; /* 800px, ancho lógico del canvas */
 }
 
+/* =========================================================
+   ESTRUCTURA GENERAL
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Composición bidimensional (grid): centra la app en ambos ejes */
 body {
   margin: 0;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-md);
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-main);
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
 }
 
+/* Composición unidimensional (flex en columna) */
 .app-shell {
+  width: min(100%, var(--max-width));
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: min(100%, 800px);
-  padding: 1rem;
+  gap: var(--space-md);
 }
 
-/* Tipografía contrastada en la misma fuente mediante peso y color */
-.app-header h1 {
+/* =========================================================
+   CABECERA Y MARCADOR
+   ========================================================= */
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.app-title {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 900;
   color: var(--color-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 900;
+  line-height: 1.1;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.subtitle {
+/* Etiquetas: nivel tipográfico más bajo */
+.app-subtitle,
+.hud__label,
+.settings__legend {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
+/* Región común: el marcador agrupado en un panel */
 .hud {
   display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
-  padding: 1rem;
+  gap: var(--space-lg);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
   background-color: var(--color-surface);
   border-radius: var(--radius);
-  border: 1px solid hsl(225, 20%, 25%);
 }
 
-.hud-item { font-size: 1.2rem; }
-.hud-item strong { color: var(--color-accent); }
+.hud__value {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums; /* Las cifras no "bailan" */
+}
 
-/* Canvas como elemento block contenido */
-canvas {
+/* Mismo color que la entidad a la que se refiere */
+.hud__value--score { color: var(--color-accent); }
+.hud__value--lives { color: var(--color-primary); }
+
+/* =========================================================
+   ZONA DE JUEGO
+   ========================================================= */
+.game {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Posicionamiento justificado: contexto para el mensaje superpuesto */
+.game__stage { position: relative; }
+
+.game__canvas {
   display: block;
   width: 100%;
-  max-width: 800px;
+  height: auto;
   aspect-ratio: 4 / 3;
-  background-color: hsl(225, 40%, 4%);
+  background-color: var(--color-canvas);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius);
-  box-shadow: 0 10px 30px hsla(200, 100%, 50%, 0.1);
 }
+
+/* El canvas no puede contener HTML, así que el mensaje de estado
+   se superpone con position: absolute */
+.game__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--space-xl);
+  border-radius: var(--radius);
+  background-color: hsl(225 40% 4% / 0.65);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+
+.game__overlay[hidden] { display: none; }
+
+/* =========================================================
+   AJUSTES Y CONTROLES
+   ========================================================= */
+/* Proximidad: la dificultad junto al botón de iniciar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface);
+  border-radius: var(--radius);
+}
+
+.settings {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings__options {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.settings input { accent-color: var(--color-primary); }
+.settings:disabled { opacity: 0.5; }
 
 .controls {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
+/* Semejanza: todos los botones comparten forma; el color indica la función */
 .btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid transparent;
   border-radius: var(--radius);
+  font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: filter 0.2s, transform 0.1s;
@@ -93,25 +210,63 @@ canvas {
 .btn:hover:not(:disabled) { filter: brightness(1.2); }
 .btn:active:not(:disabled) { transform: translateY(2px); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:focus-visible { outline: 3px solid var(--color-text); outline-offset: 2px; }
 
-.btn-primary { background: var(--color-primary); color: hsl(225, 40%, 4%); }
-.btn-secondary { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-text-muted); }
-.btn-help { background: transparent; color: var(--color-accent); border: 1px solid var(--color-accent); }
+.btn--primary { background: var(--color-primary); color: var(--color-canvas); }
+.btn--secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border); }
+.btn--danger { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
 
-/* Estilizado del Popover API NATIVO */
-[popover] {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-text-muted);
-  border-radius: var(--radius);
-  padding: 2rem;
-  box-shadow: 0 20px 40px hsla(0, 0%, 0%, 0.5);
+.controls-hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
 }
 
-[popover]::backdrop {
-  background-color: hsla(225, 30%, 8%, 0.8);
+kbd {
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-xs);
+  font: inherit;
+  font-weight: 700;
+}
+
+/* =========================================================
+   POPOVERS (API nativa, el navegador los centra en la capa superior)
+   ========================================================= */
+.popover-panel {
+  width: min(90vw, 34rem);
+  padding: var(--space-xl);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 40px hsl(0 0% 0% / 0.5);
+}
+
+.popover-panel::backdrop {
+  background-color: hsl(225 30% 8% / 0.8);
   backdrop-filter: blur(4px);
 }
 
-.danger { border-color: var(--color-danger); }
-.danger h2 { color: var(--color-danger); }
+.popover-panel__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+}
+
+.popover-panel__list {
+  display: grid;
+  gap: var(--space-sm);
+  padding-inline-start: var(--space-lg);
+}
+
+.popover-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.popover-panel--danger { border-color: var(--color-danger); }
+.popover-panel--danger .popover-panel__title { color: var(--color-danger); }

@@ -3,51 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arcade · Matamarcianos</title>
+  <meta name="color-scheme" content="dark">
+  <title>Defensor Espacial · Arcade</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="controller.js"></script>
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div>
-        <h1>Defensor Espacial</h1>
-        <p class="subtitle">Sobrevive a las oleadas</p>
-      </div>
-      <div class="hud">
-        <span class="hud-item">Puntuación: <strong data-score>0</strong></span>
-        <span class="hud-item">Vidas: <strong data-lives>3</strong></span>
-      </div>
+      <hgroup>
+        <h1 class="app-title">Defensor Espacial</h1>
+        <p class="app-subtitle">Sobrevive a las oleadas</p>
+      </hgroup>
+
+      <!-- Indicador de progreso -->
+      <dl class="hud" aria-label="Marcador">
+        <div>
+          <dt class="hud__label">Puntuación</dt>
+          <dd class="hud__value hud__value--score"><output data-score>0</output></dd>
+        </div>
+        <div>
+          <dt class="hud__label">Vidas</dt>
+          <dd class="hud__value hud__value--lives"><output data-lives>3</output></dd>
+        </div>
+        <div>
+          <dt class="hud__label">Estado</dt>
+          <dd class="hud__value" data-state>Detenida</dd>
+        </div>
+      </dl>
     </header>
 
-    <main class="game-container">
-      <canvas id="gameCanvas" width="800" height="600" aria-label="Pantalla del juego"></canvas>
-      
-      <div class="controls">
-        <button id="btn-start" class="btn btn-primary">Iniciar Partida</button>
-        <button id="btn-pause" class="btn btn-secondary" disabled>Pausar</button>
-        <!-- Popover API Nativa -->
-        <button class="btn btn-help" popovertarget="helpMenu">¿Cómo jugar?</button>
+    <main class="game">
+      <div class="game__stage">
+        <canvas class="game__canvas" data-canvas width="800" height="600" role="img" aria-label="Pantalla del juego">
+          Tu navegador no es compatible con Canvas.
+        </canvas>
+        <p class="game__overlay" data-overlay role="status">Elige la dificultad y pulsa «Iniciar partida»</p>
       </div>
+
+      <section class="toolbar" aria-label="Ajustes y controles">
+        <fieldset class="settings" data-settings>
+          <legend class="settings__legend">Dificultad</legend>
+          <div class="settings__options">
+            <label><input type="radio" name="difficulty" value="facil"> Fácil</label>
+            <label><input type="radio" name="difficulty" value="normal" checked> Normal</label>
+            <label><input type="radio" name="difficulty" value="dificil"> Difícil</label>
+          </div>
+        </fieldset>
+
+        <div class="controls">
+          <button type="button" class="btn btn--primary" data-action="start">Iniciar partida</button>
+          <button type="button" class="btn btn--secondary" data-action="pause" aria-keyshortcuts="P" disabled>Pausar</button>
+          <button type="button" class="btn btn--danger" data-action="end" popovertarget="confirmEndMenu" disabled>Terminar</button>
+          <button type="button" class="btn btn--secondary" popovertarget="helpMenu">¿Cómo jugar?</button>
+        </div>
+      </section>
+
+      <p class="controls-hint"><kbd>←</kbd> <kbd>→</kbd> mover · <kbd>Espacio</kbd> disparar · <kbd>P</kbd> pausar</p>
     </main>
   </div>
 
-  <!-- Popover de Ayuda -->
+  <!-- Popover de ayuda -->
   <div id="helpMenu" popover class="popover-panel">
-    <h2>Reglas del Juego</h2>
-    <ul>
-      <li><strong>Movimiento:</strong> Flecha Izquierda / Flecha Derecha.</li>
-      <li><strong>Disparo:</strong> Barra Espaciadora.</li>
-      <li><strong>Objetivo:</strong> Destruye las naves rojas antes de que te toquen.</li>
+    <h2 class="popover-panel__title">Reglas del juego</h2>
+    <ul class="popover-panel__list">
+      <li><strong>Objetivo:</strong> destruye las naves enemigas (rojas) antes de que te alcancen o lleguen al suelo.</li>
+      <li><strong>Movimiento:</strong> <kbd>←</kbd> / <kbd>→</kbd>. La nave acelera y frena de forma progresiva.</li>
+      <li><strong>Disparo:</strong> <kbd>Espacio</kbd>. Mantenlo pulsado para disparar en ráfaga.</li>
+      <li><strong>Vidas:</strong> pierdes una si una nave enemiga te choca o se escapa por abajo.</li>
+      <li><strong>Puntuación:</strong> +10 por nave destruida. Los enemigos aparecen cada vez más rápido.</li>
+      <li><strong>Dificultad:</strong> elígela antes de empezar. Fácil: 5 vidas · Normal: 3 · Difícil: 2 y enemigos más rápidos.</li>
+      <li><strong>Pausa:</strong> <kbd>P</kbd> o botón «Pausar». Abrir esta ayuda también pausa la partida.</li>
     </ul>
-    <button class="btn btn-secondary" popovertarget="helpMenu" popovertargetaction="hide">Cerrar</button>
+    <div class="popover-panel__actions">
+      <button type="button" class="btn btn--secondary" popovertarget="helpMenu" popovertargetaction="hide" autofocus>Cerrar</button>
+    </div>
   </div>
 
-  <!-- Popover de Fin de Juego -->
-  <div id="gameOverMenu" popover class="popover-panel danger">
-    <h2>¡Fin de la partida!</h2>
+  <!-- Popover de confirmación al terminar -->
+  <div id="confirmEndMenu" popover class="popover-panel popover-panel--danger">
+    <h2 class="popover-panel__title">¿Terminar la partida?</h2>
+    <p>La partida está en pausa. Si la terminas, se perderá el progreso actual.</p>
+    <div class="popover-panel__actions">
+      <button type="button" class="btn btn--secondary" popovertarget="confirmEndMenu" popovertargetaction="hide" autofocus>Seguir jugando</button>
+      <button type="button" class="btn btn--danger" data-action="confirm-end">Sí, terminar</button>
+    </div>
+  </div>
+
+  <!-- Popover de fin de partida -->
+  <div id="gameOverMenu" popover class="popover-panel popover-panel--danger">
+    <h2 class="popover-panel__title">¡Fin de la partida!</h2>
     <p>Puntuación final: <strong data-final-score>0</strong></p>
-    <button id="btn-restart" class="btn btn-primary">Volver a jugar</button>
+    <div class="popover-panel__actions">
+      <button type="button" class="btn btn--secondary" popovertarget="gameOverMenu" popovertargetaction="hide">Cerrar</button>
+      <button type="button" class="btn btn--primary" data-action="restart" autofocus>Volver a jugar</button>
+    </div>
   </div>
 </body>
 </html>
